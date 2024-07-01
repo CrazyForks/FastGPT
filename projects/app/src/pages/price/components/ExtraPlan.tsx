@@ -39,6 +39,9 @@ const ExtraPlan = () => {
   const onclickBuyDatasetSize = useCallback(
     async ({ datasetSize, month }: { datasetSize: number; month: number }) => {
       try {
+        datasetSize = Math.ceil(datasetSize);
+        month = Math.ceil(month);
+
         const datasetSizePayAmount = datasetSize * month * extraDatasetPrice;
         if (datasetSizePayAmount === 0) {
           return toast({
@@ -80,6 +83,8 @@ const ExtraPlan = () => {
   const onclickBuyExtraPoints = useCallback(
     async ({ points }: { points: number }) => {
       try {
+        points = Math.ceil(points);
+
         const month = 1;
         const payAmount = points * month * extraPointsPrice;
 
@@ -122,7 +127,7 @@ const ExtraPlan = () => {
       <Box id={'extra-plan'} fontWeight={'bold'} fontSize={['24px', '36px']}>
         {t('support.wallet.subscription.Extra plan')}
       </Box>
-      <Box mt={8} mb={10} color={'myGray.500'} fontSize={'lg'}>
+      <Box mt={8} mb={10} color={'myGray.500'} fontSize={'md'}>
         {t('support.wallet.subscription.Extra plan tip')}
       </Box>
       <Grid mt={8} gridTemplateColumns={['1fr', '1fr 1fr']} gap={5} w={['100%', 'auto']}>
@@ -138,12 +143,12 @@ const ExtraPlan = () => {
         >
           <Flex borderBottomWidth={'1px'} borderBottomColor={'myGray.200'}>
             <Box flex={'1 0 0'}>
-              <Box fontSize={'xl'} color={'primary.600'}>
+              <Box fontSize={'lg'} color={'primary.600'}>
                 {t('support.wallet.subscription.Extra dataset size')}
               </Box>
               <Box mt={3} fontSize={['28px', '32px']} fontWeight={'bold'}>
                 ￥{extraDatasetPrice}/1000组{' '}
-                <Box ml={1} as={'span'} fontSize={'lg'} color={'myGray.600'} fontWeight={'normal'}>
+                <Box ml={1} as={'span'} fontSize={'md'} color={'myGray.600'} fontWeight={'normal'}>
                   /{t('common.month')}
                 </Box>
               </Box>
@@ -243,12 +248,12 @@ const ExtraPlan = () => {
         >
           <Flex borderBottomWidth={'1px'} borderBottomColor={'myGray.200'}>
             <Box flex={'1 0 0'}>
-              <Box fontSize={'xl'} color={'primary.600'}>
+              <Box fontSize={'lg'} color={'primary.600'}>
                 {t('support.wallet.subscription.Extra ai points')}
               </Box>
               <Box mt={3} fontSize={['28px', '32px']} fontWeight={'bold'}>
                 ￥{extraPointsPrice}/1000积分{' '}
-                <Box ml={1} as={'span'} fontSize={'lg'} color={'myGray.600'} fontWeight={'normal'}>
+                <Box ml={1} as={'span'} fontSize={'md'} color={'myGray.600'} fontWeight={'normal'}>
                   /{t('common.month')}
                 </Box>
               </Box>

@@ -1,9 +1,8 @@
-import { SseResponseEventEnum } from '@fastgpt/global/core/module/runtime/constants';
+import { SseResponseEventEnum } from '@fastgpt/global/core/workflow/runtime/constants';
 import { getErrText } from '@fastgpt/global/common/error/utils';
 import type { ChatHistoryItemResType } from '@fastgpt/global/core/chat/type.d';
 import type { StartChatFnProps } from '@/components/ChatBox/type.d';
-import { getToken } from '@/web/support/user/auth';
-import { DispatchNodeResponseKeyEnum } from '@fastgpt/global/core/module/runtime/constants';
+import { DispatchNodeResponseKeyEnum } from '@fastgpt/global/core/workflow/runtime/constants';
 import dayjs from 'dayjs';
 import {
   // refer to https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web
@@ -19,10 +18,12 @@ type StreamFetchProps = {
   onMessage: StartChatFnProps['generatingMessage'];
   abortCtrl: AbortController;
 };
-type StreamResponseType = {
+export type StreamResponseType = {
   responseText: string;
   [DispatchNodeResponseKeyEnum.nodeResponse]: ChatHistoryItemResType[];
 };
+class FatalError extends Error {}
+
 export const streamFetch = ({
   url = '/api/v1/chat/completions',
   data,
@@ -67,7 +68,7 @@ export const streamFetch = ({
       });
     };
 
-    const isAnswerEvent = (event: `${SseResponseEventEnum}`) =>
+    const isAnswerEvent = (event: SseResponseEventEnum) =>
       event === SseResponseEventEnum.answer || event === SseResponseEventEnum.fastAnswer;
     // animate response to make it looks smooth
     function animateResponseText() {
@@ -107,13 +108,12 @@ export const streamFetch = ({
     try {
       // auto complete variables
       const variables = data?.variables || {};
-      variables.cTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      variables.cTime = dayjs().format('YYYY-MM-DD HH:mm:ss dddd');
 
       const requestData = {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          token: getToken()
+          'Content-Type': 'application/json'
         },
         signal: abortCtrl.signal,
         body: JSON.stringify({
@@ -196,6 +196,11 @@ export const streamFetch = ({
             });
           } else if (event === SseResponseEventEnum.flowResponses && Array.isArray(parseJson)) {
             responseData = parseJson;
+          } else if (event === SseResponseEventEnum.updateVariables) {
+            onMessage({
+              event,
+              variables: parseJson
+            });
           } else if (event === SseResponseEventEnum.error) {
             if (parseJson.statusText === TeamErrEnum.aiPointsNotEnough) {
               useSystemStore.getState().setIsNotSufficientModal(true);
@@ -206,9 +211,12 @@ export const streamFetch = ({
         onclose() {
           finished = true;
         },
-        onerror(e) {
+        onerror(err) {
+          if (err instanceof FatalError) {
+            throw err;
+          }
           clearTimeout(timeoutId);
-          failedFinish(getErrText(e));
+          failedFinish(getErrText(err));
         },
         openWhenHidden: true
       });
